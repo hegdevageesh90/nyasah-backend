@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"net/http"
+	"nyasah/models"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"net/http"
-	"nyasah/models"
 )
 
 type SocialProofHandler struct {
@@ -31,10 +32,10 @@ func (h *SocialProofHandler) Create(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
 	proof := models.SocialProof{
-		Type:      input.Type,
-		ProductID: input.ProductID,
-		UserID:    userID.(uuid.UUID),
-		Content:   input.Content,
+		Type:     input.Type,
+		EntityID: input.ProductID,
+		UserID:   userID.(uuid.UUID),
+		Content:  input.Content,
 	}
 
 	if err := h.db.Create(&proof).Error; err != nil {
@@ -57,10 +58,10 @@ func (h *SocialProofHandler) List(c *gin.Context) {
 
 func (h *SocialProofHandler) GetAnalytics(c *gin.Context) {
 	var stats struct {
-		TotalProofs     int64 `json:"total_proofs"`
-		PurchaseProofs  int64 `json:"purchase_proofs"`
-		ReviewProofs    int64 `json:"review_proofs"`
-		ViewProofs      int64 `json:"view_proofs"`
+		TotalProofs    int64 `json:"total_proofs"`
+		PurchaseProofs int64 `json:"purchase_proofs"`
+		ReviewProofs   int64 `json:"review_proofs"`
+		ViewProofs     int64 `json:"view_proofs"`
 	}
 
 	h.db.Model(&models.SocialProof{}).Count(&stats.TotalProofs)

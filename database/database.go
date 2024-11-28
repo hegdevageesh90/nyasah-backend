@@ -3,6 +3,7 @@ package database
 import (
 	"nyasah/config"
 	"nyasah/models"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -15,9 +16,10 @@ func Initialize(cfg *config.Config) (*gorm.DB, error) {
 
 	// Auto migrate models
 	err = db.AutoMigrate(
+		&models.Tenant{},
 		&models.User{},
+		&models.Entity{},
 		&models.Review{},
-		&models.Product{},
 		&models.SocialProof{},
 	)
 	if err != nil {

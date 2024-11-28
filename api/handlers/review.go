@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"net/http"
+	"nyasah/models"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"net/http"
-	"nyasah/models"
 )
 
 type ReviewHandler struct {
@@ -19,8 +20,8 @@ func NewReviewHandler(db *gorm.DB) *ReviewHandler {
 func (h *ReviewHandler) Create(c *gin.Context) {
 	var input struct {
 		ProductID uuid.UUID `json:"product_id" binding:"required"`
-		Rating    int      `json:"rating" binding:"required,min=1,max=5"`
-		Content   string   `json:"content" binding:"required"`
+		Rating    int       `json:"rating" binding:"required,min=1,max=5"`
+		Content   string    `json:"content" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -31,11 +32,11 @@ func (h *ReviewHandler) Create(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
 	review := models.Review{
-		UserID:    userID.(uuid.UUID),
-		ProductID: input.ProductID,
-		Rating:    input.Rating,
-		Content:   input.Content,
-		Verified:  true,
+		UserID:   userID.(uuid.UUID),
+		EntityID: input.ProductID,
+		Rating:   input.Rating,
+		Content:  input.Content,
+		Verified: true,
 	}
 
 	if err := h.db.Create(&review).Error; err != nil {
