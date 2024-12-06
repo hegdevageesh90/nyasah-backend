@@ -35,6 +35,7 @@ func (s *Server) setupRoutes() {
 	socialProofHandler := handlers.NewSocialProofHandler(s.db)
 	aiQueryHandler := handlers.NewAIQueryHandler(s.db, s.aiService)
 	insightsHandler := handlers.NewInsightsHandler(s.db, s.aiService)
+	tenantHandler := handlers.NewTenantHandler(s.db)
 
 	// Public routes
 	s.router.POST("/api/auth/register", authHandler.Register)
@@ -44,6 +45,11 @@ func (s *Server) setupRoutes() {
 	protected := s.router.Group("/api")
 	protected.Use(middleware.AuthMiddleware(s.config.JWTSecret))
 	{
+		// Tenants
+		protected.POST("/admin/tenats", tenantHandler.Create)
+		protected.GET("/admin/tenants/:id", tenantHandler.Get)
+		protected.PUT("/admin/tenants/:id", tenantHandler.Update)
+
 		// Reviews
 		protected.POST("/reviews", reviewHandler.Create)
 		protected.GET("/reviews", reviewHandler.List)
