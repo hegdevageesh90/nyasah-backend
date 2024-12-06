@@ -27,23 +27,29 @@ This is the backend implementation for the Nyasah AI multi-tenant social proofin
 ## API Endpoints
 
 ### Tenant Management (Admin)
-- POST /api/admin/tenants - Create a new tenant
-- GET /api/admin/tenants/:id - Get tenant details
-- PUT /api/admin/tenants/:id - Update tenant settings
+- POST   /api/admin/tenants - Create a new tenant
+- GET    /api/admin/tenants/:id - Get tenant details
+- PUT    /api/admin/tenants/:id - Update tenant settings
 
 ### Per-Tenant Authentication
-- POST /api/auth/register - Register a new user
-- POST /api/auth/login - Login and get JWT token
+- POST   /api/auth/register - Register a new user
+- POST   /api/auth/login - Login and get JWT token
 
 ### Reviews
-- POST /api/reviews - Create a new review
-- GET /api/reviews - List all reviews
-- GET /api/reviews/:id - Get a specific review
+- POST   /api/reviews - Create a new review
+- GET    /api/reviews - List all reviews
+- GET    /api/reviews/:id - Get a specific review
 
 ### Social Proof
-- POST /api/social-proof - Create new social proof
-- GET /api/social-proof - List all social proofs
-- GET /api/social-proof/analytics - Get social proof analytics
+- POST   /api/social-proof - Create new social proof
+- GET    /api/social-proof - List all social proofs
+- GET    /api/social-proof/analytics - Get social proof analytics
+
+### AI Based
+- POST   /api/ai/query - Process a natural language query
+- GET    /api/ai/insights/product/:id - Get insights on a product
+- GET    /api/ai/insights/recommendations - Get AI based recommendations
+- GET    /api/ai/insights/trends - Get trends
 
 ## Testing
 
