@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"nyasah/config"
-	"nyasah/models"
+	"nyasah-backend/config"
+	"nyasah-backend/models"
 	"time"
 
 	"github.com/gin-gonic/gin"

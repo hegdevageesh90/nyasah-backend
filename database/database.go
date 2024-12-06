@@ -1,8 +1,8 @@
 package database
 
 import (
-	"nyasah/config"
-	"nyasah/models"
+	"nyasah-backend/config"
+	"nyasah-backend/models"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
