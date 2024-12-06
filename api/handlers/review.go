@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"nyasah/models"
+	"nyasah-backend/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

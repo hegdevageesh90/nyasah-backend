@@ -1,64 +1,64 @@
 package api
 
 import (
-	"nyasah/api/handlers"
-	"nyasah/api/middleware"
-	"nyasah/config"
+	"nyasah-backend/api/handlers"
+	"nyasah-backend/api/middleware"
+	"nyasah-backend/config"
+	"nyasah-backend/services"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type Server struct {
-	router *gin.Engine
-	db     *gorm.DB
-	config *config.Config
+	router    *gin.Engine
+	db        *gorm.DB
+	config    *config.Config
+	aiService *services.Service
 }
 
 func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	server := &Server{
-		router: gin.Default(),
-		db:     db,
-		config: cfg,
+		router:    gin.Default(),
+		db:        db,
+		config:    cfg,
+		aiService: services.NewAIService(db),
 	}
 	server.setupRoutes()
 	return server
 }
 
 func (s *Server) setupRoutes() {
-	// Admin routes for tenant management
-	admin := s.router.Group("/api/admin")
-	admin.Use(middleware.AuthMiddleware(s.config.JWTSecret))
+	// Create handlers
+	authHandler := handlers.NewAuthHandler(s.db, s.config)
+	reviewHandler := handlers.NewReviewHandler(s.db)
+	socialProofHandler := handlers.NewSocialProofHandler(s.db)
+	aiQueryHandler := handlers.NewAIQueryHandler(s.db, s.aiService)
+	insightsHandler := handlers.NewInsightsHandler(s.db, s.aiService)
+
+	// Public routes
+	s.router.POST("/api/auth/register", authHandler.Register)
+	s.router.POST("/api/auth/login", authHandler.Login)
+
+	// Protected routes
+	protected := s.router.Group("/api")
+	protected.Use(middleware.AuthMiddleware(s.config.JWTSecret))
 	{
-		tenantHandler := handlers.NewTenantHandler(s.db)
-		admin.POST("/tenants", tenantHandler.Create)
-		admin.GET("/tenants/:id", tenantHandler.Get)
-		admin.PUT("/tenants/:id", tenantHandler.Update)
-	}
+		// Reviews
+		protected.POST("/reviews", reviewHandler.Create)
+		protected.GET("/reviews", reviewHandler.List)
+		protected.GET("/reviews/:id", reviewHandler.Get)
 
-	// Tenant-specific routes
-	api := s.router.Group("/api")
-	api.Use(middleware.TenantMiddleware(s.db))
-	{
-		// Auth routes
-		authHandler := handlers.NewAuthHandler(s.db, s.config)
-		api.POST("/auth/register", authHandler.Register)
-		api.POST("/auth/login", authHandler.Login)
+		// Social Proof
+		protected.POST("/social-proof", socialProofHandler.Create)
+		protected.GET("/social-proof", socialProofHandler.List)
+		protected.GET("/social-proof/analytics", socialProofHandler.GetAnalytics)
 
-		// Protected routes
-		protected := api.Group("")
-		protected.Use(middleware.AuthMiddleware(s.config.JWTSecret))
-		{
-			reviewHandler := handlers.NewReviewHandler(s.db)
-			protected.POST("/reviews", reviewHandler.Create)
-			protected.GET("/reviews", reviewHandler.List)
-			protected.GET("/reviews/:id", reviewHandler.Get)
-
-			socialProofHandler := handlers.NewSocialProofHandler(s.db)
-			protected.POST("/social-proof", socialProofHandler.Create)
-			protected.GET("/social-proof", socialProofHandler.List)
-			protected.GET("/social-proof/analytics", socialProofHandler.GetAnalytics)
-		}
+		// AI Features
+		protected.POST("/ai/query", aiQueryHandler.Query)
+		protected.GET("/ai/insights/product/:id", insightsHandler.GetProductInsights)
+		protected.GET("/ai/insights/recommendations", insightsHandler.GetRecommendations)
+		protected.GET("/ai/insights/trends", insightsHandler.GetTrendAnalysis)
 	}
 }
 

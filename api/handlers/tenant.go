@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"net/http"
-	"nyasah/models"
+	"nyasah-backend/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

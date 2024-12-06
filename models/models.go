@@ -44,33 +44,94 @@ type Entity struct {
 }
 
 type Review struct {
+	ID         uuid.UUID `gorm:"type:uuid;primary_key"`
+	TenantID   uuid.UUID `gorm:"type:uuid;not null"`
+	UserID     uuid.UUID `gorm:"type:uuid"`
+	EntityID   uuid.UUID `gorm:"type:uuid"`
+	Rating     int
+	Content    string
+	Verified   bool
+	Metadata   JSON `gorm:"type:json"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	Tenant     Tenant           `gorm:"foreignKey:TenantID"`
+	User       User             `gorm:"foreignKey:UserID"`
+	Entity     Entity           `gorm:"foreignKey:EntityID"`
+	Engagement ReviewEngagement `gorm:"foreignKey:ReviewID"`
+	Sentiment  float64          // AI-analyzed sentiment score
+	Keywords   []string         `gorm:"type:json"`
+}
+
+type ReviewEngagement struct {
 	ID        uuid.UUID `gorm:"type:uuid;primary_key"`
-	TenantID  uuid.UUID `gorm:"type:uuid;not null"`
-	UserID    uuid.UUID `gorm:"type:uuid"`
-	EntityID  uuid.UUID `gorm:"type:uuid"`
-	Rating    int
-	Content   string
-	Verified  bool
-	Metadata  JSON `gorm:"type:json"`
+	ReviewID  uuid.UUID `gorm:"type:uuid"`
+	Views     int
+	Likes     int
+	Shares    int
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Tenant    Tenant `gorm:"foreignKey:TenantID"`
-	User      User   `gorm:"foreignKey:UserID"`
-	Entity    Entity `gorm:"foreignKey:EntityID"`
+}
+
+type Product struct {
+	ID          uuid.UUID `gorm:"type:uuid;primary_key"`
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	AIInsights  ProductInsights `gorm:"foreignKey:ProductID"`
+}
+
+type ProductInsights struct {
+	ID                 uuid.UUID `gorm:"type:uuid;primary_key"`
+	ProductID          uuid.UUID `gorm:"type:uuid"`
+	SentimentTrend     []float64 `gorm:"type:json"`
+	TopKeywords        []string  `gorm:"type:json"`
+	EngagementScore    float64
+	RecommendedActions []string `gorm:"type:json"`
+	LastUpdated        time.Time
+}
+
+type ProofPerformance struct {
+	ID             uuid.UUID `gorm:"type:uuid;primary_key"`
+	ProofID        uuid.UUID `gorm:"type:uuid"`
+	Views          int
+	Conversions    int
+	EngagementRate float64
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+type AIQuery struct {
+	ID        uuid.UUID `gorm:"type:uuid;primary_key"`
+	TenantID  uuid.UUID `gorm:"type:uuid"`
+	Query     string
+	Response  string
+	CreatedAt time.Time
+}
+
+type AIRecommendation struct {
+	ID         uuid.UUID `gorm:"type:uuid;primary_key"`
+	TenantID   uuid.UUID `gorm:"type:uuid"`
+	Type       string    // "content", "timing", "placement"
+	Suggestion string
+	Confidence float64
+	CreatedAt  time.Time
 }
 
 type SocialProof struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key"`
-	TenantID  uuid.UUID `gorm:"type:uuid;not null"`
-	Type      string    // e.g., "purchase", "review", "view", "enrollment"
-	EntityID  uuid.UUID `gorm:"type:uuid"`
-	UserID    uuid.UUID `gorm:"type:uuid"`
-	Content   string
-	Metadata  JSON `gorm:"type:json"`
-	CreatedAt time.Time
-	Tenant    Tenant `gorm:"foreignKey:TenantID"`
-	User      User   `gorm:"foreignKey:UserID"`
-	Entity    Entity `gorm:"foreignKey:EntityID"`
+	ID          uuid.UUID `gorm:"type:uuid;primary_key"`
+	TenantID    uuid.UUID `gorm:"type:uuid;not null"`
+	Type        string    // e.g., "purchase", "review", "view", "enrollment"
+	EntityID    uuid.UUID `gorm:"type:uuid"`
+	UserID      uuid.UUID `gorm:"type:uuid"`
+	Content     string
+	Metadata    JSON `gorm:"type:json"`
+	CreatedAt   time.Time
+	Tenant      Tenant           `gorm:"foreignKey:TenantID"`
+	User        User             `gorm:"foreignKey:UserID"`
+	Entity      Entity           `gorm:"foreignKey:EntityID"`
+	Performance ProofPerformance `gorm:"foreignKey:ProofID"`
+	MediaType   string           // "image", "video", "text"
 }
 
 // JSON is a custom type for handling JSON data

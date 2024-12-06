@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"net/http"
-	"nyasah/models"
+	"nyasah-backend/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
-	"nyasah/api"
-	"nyasah/config"
-	"nyasah/database"
+	"nyasah-backend/api"
+	"nyasah-backend/config"
+	"nyasah-backend/database"
 )
 
 func main() {
