@@ -1,0 +1,265 @@
+{
+    "info": {
+      "name": "Nyasah AI API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Authentication",
+        "item": [
+          {
+            "name": "Register",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "X-API-Key",
+                  "value": "{{tenant_api_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\",\n    \"name\": \"Test User\"\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/auth/register",
+                "host": ["{{base_url}}"],
+                "path": ["api", "auth", "register"]
+              }
+            }
+          },
+          {
+            "name": "Login",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "X-API-Key",
+                  "value": "{{tenant_api_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/auth/login",
+                "host": ["{{base_url}}"],
+                "path": ["api", "auth", "login"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Reviews",
+        "item": [
+          {
+            "name": "Create Review",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "X-API-Key",
+                  "value": "{{tenant_api_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{user_token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"product_id\": \"{{product_id}}\",\n    \"rating\": 5,\n    \"content\": \"Great product!\",\n    \"verified\": true\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/reviews",
+                "host": ["{{base_url}}"],
+                "path": ["api", "reviews"]
+              }
+            }
+          },
+          {
+            "name": "List Reviews",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "X-API-Key",
+                  "value": "{{tenant_api_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{user_token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/reviews",
+                "host": ["{{base_url}}"],
+                "path": ["api", "reviews"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Social Proof",
+        "item": [
+          {
+            "name": "Create Social Proof",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "X-API-Key",
+                  "value": "{{tenant_api_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{user_token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"type\": \"purchase\",\n    \"product_id\": \"{{product_id}}\",\n    \"content\": \"John D. just purchased this item!\",\n    \"media_type\": \"text\"\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/social-proof",
+                "host": ["{{base_url}}"],
+                "path": ["api", "social-proof"]
+              }
+            }
+          },
+          {
+            "name": "Get Analytics",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "X-API-Key",
+                  "value": "{{tenant_api_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{user_token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/social-proof/analytics",
+                "host": ["{{base_url}}"],
+                "path": ["api", "social-proof", "analytics"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "AI Features",
+        "item": [
+          {
+            "name": "Query AI",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "X-API-Key",
+                  "value": "{{tenant_api_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{user_token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"query\": \"What are the top trending products this week?\"\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/ai/query",
+                "host": ["{{base_url}}"],
+                "path": ["api", "ai", "query"]
+              }
+            }
+          },
+          {
+            "name": "Get Product Insights",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "X-API-Key",
+                  "value": "{{tenant_api_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{user_token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/ai/insights/product/{{product_id}}",
+                "host": ["{{base_url}}"],
+                "path": ["api", "ai", "insights", "product", "{{product_id}}"]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "variable": [
+      {
+        "key": "base_url",
+        "value": "http://localhost:8080"
+      },
+      {
+        "key": "tenant_api_key",
+        "value": "your-tenant-api-key"
+      },
+      {
+        "key": "user_token",
+        "value": "your-user-token"
+      },
+      {
+        "key": "product_id",
+        "value": "product-uuid"
+      }
+    ]
+  }

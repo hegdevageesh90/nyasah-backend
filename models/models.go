@@ -88,6 +88,9 @@ type ProductInsights struct {
 	TopKeywords        []string  `gorm:"type:json"`
 	EngagementScore    float64
 	RecommendedActions []string `gorm:"type:json"`
+	AverageRating      float64
+	EngagementRate     float64
+	SentimentScore     float64
 	LastUpdated        time.Time
 }
 

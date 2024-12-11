@@ -5,13 +5,6 @@ import (
 	"time"
 )
 
-type TimeFrame struct {
-	Reviews []models.Review
-	Proofs  []models.SocialProof
-	Start   time.Time
-	End     time.Time
-}
-
 func CalculateReviewEngagement(review models.Review) float64 {
 	if review.Engagement.Views == 0 {
 		return 0

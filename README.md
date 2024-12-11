@@ -10,6 +10,7 @@ This is the backend implementation for the Nyasah AI multi-tenant social proofin
 - Generic entity management
 - Review and social proof tracking
 - Analytics per tenant
+- Multiple AI Provider Support (OpenAI, Claude, HuggingFace, Llama)
 
 ## Getting Started
 
@@ -19,59 +20,26 @@ This is the backend implementation for the Nyasah AI multi-tenant social proofin
    ```bash
    go mod download
    ```
-4. Run the server:
+4. Set up environment variables in `.env`:
+   ```
+   PORT=8080
+   JWT_SECRET=your-secure-secret-key
+   DATABASE_URL=nyasah.db
+   OPENAI_API_KEY=your-openai-api-key
+   CLAUDE_API_KEY=your-claude-api-key
+   HUGGINGFACE_API_KEY=your-huggingface-api-key
+   LLAMA_SERVER_URL=http://localhost:8000
+   ```
+5. Run the server:
    ```bash
    go run main.go
    ```
 
-## API Endpoints
+## API Documentation
 
-### Tenant Management (Admin)
-- POST   /api/admin/tenants - Create a new tenant
-- GET    /api/admin/tenants/:id - Get tenant details
-- PUT    /api/admin/tenants/:id - Update tenant settings
+### Authentication
 
-### Per-Tenant Authentication
-- POST   /api/auth/register - Register a new user
-- POST   /api/auth/login - Login and get JWT token
-
-### Reviews
-- POST   /api/reviews - Create a new review
-- GET    /api/reviews - List all reviews
-- GET    /api/reviews/:id - Get a specific review
-
-### Social Proof
-- POST   /api/social-proof - Create new social proof
-- GET    /api/social-proof - List all social proofs
-- GET    /api/social-proof/analytics - Get social proof analytics
-
-### AI Based
-- POST   /api/ai/query - Process a natural language query
-- GET    /api/ai/insights/product/:id - Get insights on a product
-- GET    /api/ai/insights/recommendations - Get AI based recommendations
-- GET    /api/ai/insights/trends - Get trends
-
-## Testing
-
-To test the API endpoints, you can use the following curl commands:
-
-1. Create a new tenant (admin):
-```bash
-curl -X POST http://localhost:8080/api/admin/tenants \
-  -H "Authorization: Bearer ADMIN_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Example Store",
-    "domain": "example-store.com",
-    "type": "ecommerce",
-    "settings": {
-      "allowedReviewTypes": ["product", "service"],
-      "moderationEnabled": true
-    }
-  }'
-```
-
-2. Register a user (tenant-specific):
+#### Register User
 ```bash
 curl -X POST http://localhost:8080/api/auth/register \
   -H "X-API-Key: TENANT_API_KEY" \
@@ -83,25 +51,115 @@ curl -X POST http://localhost:8080/api/auth/register \
   }'
 ```
 
-3. Create a review (tenant-specific):
+#### Login
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "X-API-Key: TENANT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123"
+  }'
+```
+
+### Reviews
+
+#### Create Review
 ```bash
 curl -X POST http://localhost:8080/api/reviews \
   -H "X-API-Key: TENANT_API_KEY" \
   -H "Authorization: Bearer USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "entity_id": "ENTITY_UUID",
+    "product_id": "PRODUCT_UUID",
     "rating": 5,
     "content": "Great product!",
-    "metadata": {
-      "verified_purchase": true
-    }
+    "verified": true
   }'
 ```
 
-4. Get social proof analytics (tenant-specific):
+#### List Reviews
+```bash
+curl -X GET http://localhost:8080/api/reviews \
+  -H "X-API-Key: TENANT_API_KEY" \
+  -H "Authorization: Bearer USER_TOKEN"
+```
+
+#### Get Review
+```bash
+curl -X GET http://localhost:8080/api/reviews/REVIEW_UUID \
+  -H "X-API-Key: TENANT_API_KEY" \
+  -H "Authorization: Bearer USER_TOKEN"
+```
+
+### Social Proof
+
+#### Create Social Proof
+```bash
+curl -X POST http://localhost:8080/api/social-proof \
+  -H "X-API-Key: TENANT_API_KEY" \
+  -H "Authorization: Bearer USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "purchase",
+    "product_id": "PRODUCT_UUID",
+    "content": "John D. just purchased this item!",
+    "media_type": "text"
+  }'
+```
+
+#### Get Analytics
 ```bash
 curl -X GET http://localhost:8080/api/social-proof/analytics \
   -H "X-API-Key: TENANT_API_KEY" \
   -H "Authorization: Bearer USER_TOKEN"
 ```
+
+### AI Features
+
+#### Query AI
+```bash
+curl -X POST http://localhost:8080/api/ai/query \
+  -H "X-API-Key: TENANT_API_KEY" \
+  -H "Authorization: Bearer USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What are the top trending products this week?"
+  }'
+```
+
+#### Get Product Insights
+```bash
+curl -X GET http://localhost:8080/api/ai/insights/product/PRODUCT_UUID \
+  -H "X-API-Key: TENANT_API_KEY" \
+  -H "Authorization: Bearer USER_TOKEN"
+```
+
+#### Get Recommendations
+```bash
+curl -X GET http://localhost:8080/api/ai/insights/recommendations \
+  -H "X-API-Key: TENANT_API_KEY" \
+  -H "Authorization: Bearer USER_TOKEN"
+```
+
+#### Get Trend Analysis
+```bash
+curl -X GET http://localhost:8080/api/ai/insights/trends \
+  -H "X-API-Key: TENANT_API_KEY" \
+  -H "Authorization: Bearer USER_TOKEN"
+```
+
+## Postman Collection
+
+[Download Postman Collection](./postman/nyasah_api.json)
+
+## AI Provider Configuration
+
+The platform supports multiple AI providers:
+
+1. OpenAI (GPT-3.5/4)
+2. Anthropic Claude
+3. HuggingFace Models
+4. Local Llama Deployment
+
+Configure your preferred provider in the environment variables.

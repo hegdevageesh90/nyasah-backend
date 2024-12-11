@@ -5,15 +5,8 @@ import (
 	"sort"
 )
 
-type ProductInsightData struct {
-	AverageRating  float64
-	EngagementRate float64
-	SentimentScore float64
-	TopKeywords    []string
-}
-
-func GenerateProductInsights(product models.Product, reviews []models.Review, proofs []models.SocialProof) ProductInsightData {
-	insights := ProductInsightData{}
+func GenerateProductInsights(product models.Product, reviews []models.Review, proofs []models.SocialProof) models.ProductInsights {
+	insights := models.ProductInsights{}
 
 	// Calculate average rating
 	var totalRating float64

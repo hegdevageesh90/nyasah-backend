@@ -1,25 +1,25 @@
 package recommenders
 
 import (
-	"context"
 	"fmt"
 	"nyasah-backend/models"
 	"nyasah-backend/services/ai/utils"
 
 	"github.com/google/uuid"
-	"github.com/sashabaranov/go-openai"
 	"gorm.io/gorm"
+
+	"nyasah-backend/services/ai/providers"
 )
 
 type Recommender struct {
-	db     *gorm.DB
-	client *openai.Client
+	db       *gorm.DB
+	provider providers.Provider
 }
 
-func NewRecommender(db *gorm.DB, apiKey string) *Recommender {
+func NewRecommender(db *gorm.DB, provider providers.Provider) *Recommender {
 	return &Recommender{
-		db:     db,
-		client: openai.NewClient(apiKey),
+		db:       db,
+		provider: provider,
 	}
 }
 
@@ -28,39 +28,66 @@ func (r *Recommender) GenerateActions(productID uuid.UUID) []string {
 	var reviews []models.Review
 	var proofs []models.SocialProof
 
+	// Fetching the required data from the database
 	r.db.First(&product, productID)
 	r.db.Where("product_id = ?", productID).Find(&reviews)
 	r.db.Where("product_id = ?", productID).Find(&proofs)
 
+	// Generate product insights using utility
 	insights := utils.GenerateProductInsights(product, reviews, proofs)
 
-	prompt := `Based on the following product insights, suggest specific actions to improve social proof and engagement:
+	// Constructing the prompt for the AI provider
+	prompt := fmt.Sprintf(`Based on the following product insights, suggest specific actions to improve social proof and engagement:
 	
-	Product: ` + product.Name + `
-	Average Rating: ` + fmt.Sprintf("%.2f", insights.AverageRating) + `
-	Review Count: ` + fmt.Sprintf("%d", len(reviews)) + `
-	Engagement Rate: ` + fmt.Sprintf("%.2f", insights.EngagementRate) + `
+	Product: %s
+	Average Rating: %.2f
+	Review Count: %d
+	Engagement Rate: %.2f
 	
-	Provide 3-5 specific, actionable recommendations:`
-
-	resp, err := r.client.CreateChatCompletion(
-		context.Background(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: prompt,
-				},
-			},
-		},
+	Provide 3-5 specific, actionable recommendations:`,
+		product.Name,
+		insights.AverageRating,
+		len(reviews),
+		insights.EngagementRate,
 	)
 
+	// Call the ProcessQuery method of the provider
+	response, err := r.provider.ProcessQuery(prompt)
 	if err != nil {
+		// Return default recommendations in case of error
 		return []string{"Highlight positive reviews", "Add customer photos", "Display purchase notifications"}
 	}
 
-	return utils.ParseRecommendations(resp.Choices[0].Message.Content)
+	// Parse and return recommendations using utility
+	return utils.ParseRecommendations(response)
+}
+
+// GenerateInsights fetches data for the specified product and analyzes it to produce insights.
+func (r *Recommender) GenerateInsights(productID uuid.UUID) (models.ProductInsights, error) {
+	var product models.Product
+	var reviews []models.Review
+	var proofs []models.SocialProof
+
+	// Fetch product details
+	if err := r.db.First(&product, productID).Error; err != nil {
+		return models.ProductInsights{}, fmt.Errorf("failed to fetch product: %w", err)
+	}
+
+	// Fetch associated reviews
+	if err := r.db.Where("product_id = ?", productID).Find(&reviews).Error; err != nil {
+		return models.ProductInsights{}, fmt.Errorf("failed to fetch reviews: %w", err)
+	}
+
+	// Fetch associated social proofs
+	if err := r.db.Where("product_id = ?", productID).Find(&proofs).Error; err != nil {
+		return models.ProductInsights{}, fmt.Errorf("failed to fetch social proofs: %w", err)
+	}
+
+	// Calculate insights using the utility function
+	insights := utils.GenerateProductInsights(product, reviews, proofs)
+
+	// Return the analyzed insights
+	return insights, nil
 }
 
 func (r *Recommender) GenerateRecommendations(tenantID uuid.UUID) ([]models.AIRecommendation, error) {
