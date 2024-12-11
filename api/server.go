@@ -41,15 +41,16 @@ func (s *Server) setupRoutes() {
 	s.router.POST("/api/auth/register", authHandler.Register)
 	s.router.POST("/api/auth/login", authHandler.Login)
 
+	// Tenants API - for admin use
+	// TODO : need to find a way to secure this
+	s.router.POST("/api/admin/tenats", tenantHandler.Create)
+	s.router.GET("/api/admin/tenants/:id", tenantHandler.Get)
+	s.router.PUT("/api/admin/tenants/:id", tenantHandler.Update)
+
 	// Protected routes
 	protected := s.router.Group("/api")
 	protected.Use(middleware.AuthMiddleware(s.config.JWTSecret))
 	{
-		// Tenants
-		protected.POST("/admin/tenats", tenantHandler.Create)
-		protected.GET("/admin/tenants/:id", tenantHandler.Get)
-		protected.PUT("/admin/tenants/:id", tenantHandler.Update)
-
 		// Reviews
 		protected.POST("/reviews", reviewHandler.Create)
 		protected.GET("/reviews", reviewHandler.List)

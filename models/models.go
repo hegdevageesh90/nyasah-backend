@@ -5,16 +5,18 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	"encoding/json"
 )
 
 type Tenant struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key"`
-	Name      string    `gorm:"not null"`
-	Domain    string    `gorm:"unique;not null"`
-	Type      string    `gorm:"not null"` // e.g., "ecommerce", "education", "healthcare"
-	ApiKey    string    `gorm:"unique;not null"`
-	Active    bool      `gorm:"default:true"`
-	Settings  JSON      `gorm:"type:json"`
+	ID        uuid.UUID       `gorm:"type:uuid;primary_key"`
+	Name      string          `gorm:"not null"`
+	Domain    string          `gorm:"unique;not null"`
+	Type      string          `gorm:"not null"` // e.g., "ecommerce", "education", "healthcare"
+	ApiKey    string          `gorm:"unique;not null"`
+	Active    bool            `gorm:"default:true"`
+	Settings  json.RawMessage `gorm:"type:json"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
