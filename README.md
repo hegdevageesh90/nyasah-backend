@@ -151,15 +151,14 @@ curl -X GET http://localhost:8080/api/ai/insights/trends \
 
 ## Postman Collection
 
-[Download Postman Collection](./postman/nyasah_api.json)
+[Download Postman Collection](./nyasah_api.json)
 
 ## AI Provider Configuration
 
 The platform supports multiple AI providers:
 
 1. OpenAI (GPT-3.5/4)
-2. Anthropic Claude
-3. HuggingFace Models
-4. Local Llama Deployment
+2. HuggingFace Models
+3. Local Llama Deployment
 
 Configure your preferred provider in the environment variables.
