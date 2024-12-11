@@ -8,6 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	"encoding/json"
 )
 
 type TenantHandler struct {
@@ -28,10 +30,10 @@ func generateApiKey() (string, error) {
 
 func (h *TenantHandler) Create(c *gin.Context) {
 	var input struct {
-		Name     string                 `json:"name" binding:"required"`
-		Domain   string                 `json:"domain" binding:"required"`
-		Type     string                 `json:"type" binding:"required"`
-		Settings map[string]interface{} `json:"settings"`
+		Name     string          `json:"name" binding:"required"`
+		Domain   string          `json:"domain" binding:"required"`
+		Type     string          `json:"type" binding:"required"`
+		Settings json.RawMessage `json:"settings"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -51,7 +53,7 @@ func (h *TenantHandler) Create(c *gin.Context) {
 		Type:     input.Type,
 		ApiKey:   apiKey,
 		Active:   true,
-		Settings: models.JSON(input.Settings),
+		Settings: input.Settings,
 	}
 
 	if err := h.db.Create(&tenant).Error; err != nil {
@@ -81,9 +83,9 @@ func (h *TenantHandler) Get(c *gin.Context) {
 func (h *TenantHandler) Update(c *gin.Context) {
 	tenantID := c.Param("id")
 	var input struct {
-		Name     string                 `json:"name"`
-		Settings map[string]interface{} `json:"settings"`
-		Active   *bool                  `json:"active"`
+		Name     string          `json:"name"`
+		Settings json.RawMessage `json:"settings"`
+		Active   *bool           `json:"active"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
