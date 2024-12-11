@@ -1,55 +1,23 @@
 package analyzers
 
 import (
-	"context"
-	"fmt"
 	"nyasah-backend/models"
-	"strings"
-
-	"github.com/sashabaranov/go-openai"
+	"nyasah-backend/services/ai/providers"
+	"nyasah-backend/services/ai/utils"
 )
 
 type SentimentAnalyzer struct {
-	client *openai.Client
+	provider providers.Provider
 }
 
-func NewSentimentAnalyzer(apiKey string) *SentimentAnalyzer {
+func NewSentimentAnalyzer(provider providers.Provider) *SentimentAnalyzer {
 	return &SentimentAnalyzer{
-		client: openai.NewClient(apiKey),
+		provider: provider,
 	}
 }
 
 func (sa *SentimentAnalyzer) AnalyzeSentiment(text string) (float64, error) {
-	prompt := `Analyze the sentiment of the following text and return a score between -1 (very negative) and 1 (very positive):
-	
-	Text: """` + text + `"""
-	
-	Score:`
-
-	resp, err := sa.client.CreateChatCompletion(
-		context.Background(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: prompt,
-				},
-			},
-		},
-	)
-
-	if err != nil {
-		return 0, err
-	}
-
-	score := 0.0
-	_, err = fmt.Sscanf(resp.Choices[0].Message.Content, "%f", &score)
-	if err != nil {
-		return 0, err
-	}
-
-	return score, nil
+	return sa.provider.AnalyzeSentiment(text)
 }
 
 func (sa *SentimentAnalyzer) BatchAnalyzeSentiment(reviews []models.Review) ([]float64, error) {
@@ -64,34 +32,26 @@ func (sa *SentimentAnalyzer) BatchAnalyzeSentiment(reviews []models.Review) ([]f
 	return scores, nil
 }
 
-func (sa *SentimentAnalyzer) ExtractKeyPhrases(text string) ([]string, error) {
-	prompt := `Extract the key phrases from the following text that represent the main topics or sentiments:
-	
-	Text: """` + text + `"""
-	
-	Key phrases (comma-separated):`
+func (sa *SentimentAnalyzer) AnalyzeTrends(tenantID string) (map[string]interface{}, error) {
+	timeFrames := utils.GetTimeFrames()
+	trends := make([]float64, len(timeFrames))
 
-	resp, err := sa.client.CreateChatCompletion(
-		context.Background(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: prompt,
-				},
-			},
-		},
-	)
+	for i, frame := range timeFrames {
+		reviews, err := utils.GetReviewsInTimeFrame(tenantID, frame.Start, frame.End)
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return nil, err
+		scores, err := sa.BatchAnalyzeSentiment(reviews)
+		if err != nil {
+			return nil, err
+		}
+
+		trends[i] = utils.CalculateAverageScore(scores)
 	}
 
-	phrases := strings.Split(resp.Choices[0].Message.Content, ",")
-	for i := range phrases {
-		phrases[i] = strings.TrimSpace(phrases[i])
-	}
-
-	return phrases, nil
+	return map[string]interface{}{
+		"trends": trends,
+		"frames": timeFrames,
+	}, nil
 }

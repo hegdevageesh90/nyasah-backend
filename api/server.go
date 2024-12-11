@@ -22,7 +22,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 		router:    gin.Default(),
 		db:        db,
 		config:    cfg,
-		aiService: services.NewAIService(db),
+		aiService: services.NewAIService(db, cfg),
 	}
 	server.setupRoutes()
 	return server

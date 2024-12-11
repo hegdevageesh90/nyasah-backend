@@ -1,8 +1,10 @@
 package services
 
 import (
+	"nyasah-backend/config"
 	"nyasah-backend/models"
 	"nyasah-backend/services/ai/analyzers"
+	"nyasah-backend/services/ai/factory"
 	"nyasah-backend/services/ai/recommenders"
 	"os"
 
@@ -14,51 +16,56 @@ type Service struct {
 	db          *gorm.DB
 	analyzer    *analyzers.ContentAnalyzer
 	recommender *recommenders.Recommender
+	config      *config.Config
 }
 
-func NewAIService(db *gorm.DB) *Service {
-	apiKey := os.Getenv("OPENAI_API_KEY")
+func NewAIService(db *gorm.DB, config *config.Config) *Service {
+	providerConfig := map[string]string{
+		"api_key":    os.Getenv("OPENAI_API_KEY"),
+		"model":      config.Model,
+		"server_url": os.Getenv("LLAMA_SERVER_URL"),
+	}
+
+	provider, err := factory.CreateProvider(config.Provider, providerConfig)
+	if err != nil {
+		// Fallback to OpenAI if specified provider fails
+		config.Provider = factory.OpenAI
+		provider, _ = factory.CreateProvider(factory.OpenAI, providerConfig)
+	}
+
 	return &Service{
 		db:          db,
-		analyzer:    analyzers.NewContentAnalyzer(apiKey),
-		recommender: recommenders.NewRecommender(db, apiKey),
+		analyzer:    analyzers.NewContentAnalyzer(provider),
+		recommender: recommenders.NewRecommender(db, provider),
+		config:      config,
 	}
+}
+
+func (s *Service) UpdateConfig(config *config.Config) error {
+	providerConfig := map[string]string{
+		"api_key":    os.Getenv("OPENAI_API_KEY"),
+		"model":      config.Model,
+		"server_url": os.Getenv("LLAMA_SERVER_URL"),
+	}
+
+	provider, err := factory.CreateProvider(config.Provider, providerConfig)
+	if err != nil {
+		return err
+	}
+
+	s.analyzer = analyzers.NewContentAnalyzer(provider)
+	s.recommender = recommenders.NewRecommender(s.db, provider)
+	s.config = config
+
+	return nil
 }
 
 func (s *Service) ProcessQuery(query string, tenantID string) (string, error) {
-	// Process natural language query using the content analyzer
-	response, err := s.analyzer.ProcessQuery(query, tenantID)
-	if err != nil {
-		return "", err
-	}
-	return response, nil
+	return s.analyzer.ProcessQuery(query, tenantID)
 }
 
 func (s *Service) GenerateProductInsights(productID uuid.UUID) (models.ProductInsights, error) {
-	// Analyze reviews and social proofs for the product
-	var reviews []models.Review
-	var socialProofs []models.SocialProof
-
-	s.db.Where("product_id = ?", productID).Find(&reviews)
-	s.db.Where("product_id = ?", productID).Find(&socialProofs)
-
-	insights := models.ProductInsights{
-		ProductID: productID,
-	}
-
-	// Generate sentiment trends
-	insights.SentimentTrend = s.analyzer.AnalyzeSentimentTrend(reviews)
-
-	// Extract top keywords
-	insights.TopKeywords = s.analyzer.ExtractKeywords(reviews)
-
-	// Calculate engagement score
-	insights.EngagementScore = s.analyzer.CalculateEngagementScore(reviews, socialProofs)
-
-	// Generate recommendations
-	insights.RecommendedActions = s.recommender.GenerateActions(productID)
-
-	return insights, nil
+	return s.recommender.GenerateInsights(productID)
 }
 
 func (s *Service) GenerateRecommendations(tenantID uuid.UUID) ([]models.AIRecommendation, error) {
@@ -66,11 +73,5 @@ func (s *Service) GenerateRecommendations(tenantID uuid.UUID) ([]models.AIRecomm
 }
 
 func (s *Service) AnalyzeTrends(tenantID uuid.UUID) (map[string]interface{}, error) {
-	var reviews []models.Review
-	var socialProofs []models.SocialProof
-
-	s.db.Where("tenant_id = ?", tenantID).Find(&reviews)
-	s.db.Where("tenant_id = ?", tenantID).Find(&socialProofs)
-
-	return s.analyzer.AnalyzeTrends(reviews, socialProofs)
+	return s.analyzer.AnalyzeTrends(tenantID.String())
 }
