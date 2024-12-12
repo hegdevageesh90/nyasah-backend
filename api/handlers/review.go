@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"nyasah-backend/models"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -19,9 +21,12 @@ func NewReviewHandler(db *gorm.DB) *ReviewHandler {
 
 func (h *ReviewHandler) Create(c *gin.Context) {
 	var input struct {
-		ProductID uuid.UUID `json:"product_id" binding:"required"`
-		Rating    int       `json:"rating" binding:"required,min=1,max=5"`
-		Content   string    `json:"content" binding:"required"`
+		ProductID string          `json:"product_id" binding:"required"`
+		Rating    int             `json:"rating" binding:"required,min=1,max=5"`
+		Content   string          `json:"content" binding:"required"`
+		UserID    string          `json:"user_id"`
+		TenantID  string          `json:"tenant_id" binding:"required"`
+		MetaData  json.RawMessage `json:"metadata"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -29,14 +34,23 @@ func (h *ReviewHandler) Create(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
+	entityID, err := uuid.Parse(input.ProductID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+		return
+	}
 
 	review := models.Review{
-		UserID:   userID.(uuid.UUID),
-		EntityID: input.ProductID,
-		Rating:   input.Rating,
-		Content:  input.Content,
-		Verified: true,
+		ID:        uuid.New(),
+		UserID:    input.UserID,
+		TenantID:  input.TenantID,
+		EntityID:  entityID,
+		Rating:    input.Rating,
+		Content:   input.Content,
+		Verified:  true,
+		Metadata:  input.MetaData,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	if err := h.db.Create(&review).Error; err != nil {
@@ -48,8 +62,14 @@ func (h *ReviewHandler) Create(c *gin.Context) {
 }
 
 func (h *ReviewHandler) List(c *gin.Context) {
+	tenantID := c.Query("tenant_id")
+	if tenantID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Tenant ID is required"})
+		return
+	}
+
 	var reviews []models.Review
-	if err := h.db.Find(&reviews).Error; err != nil {
+	if err := h.db.Where("tenant_id = ?", tenantID).Find(&reviews).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reviews"})
 		return
 	}

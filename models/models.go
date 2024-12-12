@@ -47,13 +47,13 @@ type Entity struct {
 
 type Review struct {
 	ID         uuid.UUID `gorm:"type:uuid;primary_key"`
-	TenantID   uuid.UUID `gorm:"type:uuid;not null"`
-	UserID     uuid.UUID `gorm:"type:uuid"`
+	TenantID   string    `gorm:"type:uuid;not null"`
+	UserID     string
 	EntityID   uuid.UUID `gorm:"type:uuid"`
 	Rating     int
 	Content    string
 	Verified   bool
-	Metadata   JSON `gorm:"type:json"`
+	Metadata   json.RawMessage `gorm:"type:json"`
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	Tenant     Tenant           `gorm:"foreignKey:TenantID"`
